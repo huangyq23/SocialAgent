@@ -3,7 +3,6 @@ class OAuthException extends Exception {
 }
 abstract class AbstractSocialChannel
 {
-
     protected static $boundary = "";
     protected $clientId;
     protected $clientSecret;
@@ -14,6 +13,26 @@ abstract class AbstractSocialChannel
     protected $host;
 
     abstract function getServiceName();
+    abstract protected function accessTokenURL();
+    abstract protected function authorizeURL();
+    public function __construct($config, $accessToken = NULL, $refreshToken = NULL){
+
+    }
+
+    protected function get($url, $parameters = array()) {
+        $response = $this->oAuthRequest($url, 'GET', $parameters);
+        return json_decode($response, true);
+    }
+
+    protected function post($url, $parameters = array(), $multi = false) {
+        $response = $this->oAuthRequest($url, 'POST', $parameters, $multi );
+        return json_decode($response, true);
+    }
+
+    protected function delete($url, $parameters = array()) {
+        $response = $this->oAuthRequest($url, 'DELETE', $parameters);
+        return json_decode($response, true);
+    }
 
     protected function oAuthRequest($url, $method, $parameters, $multi = false) {
 
@@ -112,60 +131,6 @@ abstract class AbstractSocialChannel
         $multipartbody .= $endMPboundary;
         return $multipartbody;
     }
-}
-class WeiboSocialChannel extends AbstractSocialChannel
-{
-    private static function getCodeByMid($mid){
-        include_once('vendor/Base62/Base62.class.php');
-        $base62 = new Base62();
-        $str = '';
-        for ($i = strlen($mid) - 7; $i > -7; $i -=7)
-        {
-            $offset1 = $i < 0 ? 0 : $i;
-            $offset2 = $i + 7;
-            $num = substr($mid, $offset1,$offset2-$offset1);
-            $num = $base62->convert($num);
-            $str = $num .$str;
-        }
-
-        return $str;
-    }
-    private function accessTokenURL()
-    {
-        return 'https://api.weibo.com/oauth2/access_token';
-    }
-
-    private function authorizeURL()
-    {
-        return 'https://api.weibo.com/oauth2/authorize';
-    }
-
-    public function __construct($config, $accessToken = NULL, $refreshToken = NULL)
-    {
-        $this->host = $config['WB_HOST'];
-        $this->clientId = $config['WB_AKEY'];
-        $this->clientSecret = $config['WB_SKEY'];
-        $this->redirectUri = $config['WB_CALLBACK_URL'];
-        $this->accessToken = $accessToken;
-        $this->refreshToken = $refreshToken;
-    }
-
-    public function getServiceName()
-    {
-        return "Weibo";
-    }
-
-    public function getAuthorizeUrl($responseType='code', $state=NULL, $display = NULL)
-    {
-        $params = array(
-            'client_id' => $this->clientId,
-            'redirect_uri' => $this->redirectUri,
-            'response_type' => $responseType,
-            'state' => $state,
-            'display' => $display
-        );
-        return $this->authorizeURL() . "?" . http_build_query($params);
-	}
 
     public function setAccessToken($token){
         $this->accessToken = $token;
@@ -201,22 +166,44 @@ class WeiboSocialChannel extends AbstractSocialChannel
         return $token;
     }
 
-    public function get($url, $parameters = array()) {
-        $response = $this->oAuthRequest($url, 'GET', $parameters);
-        return json_decode($response, true);
+    public function getAuthorizeUrl($responseType='code', $state=NULL, $display = NULL)
+    {
+        $params = array(
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri,
+            'response_type' => $responseType,
+            'state' => $state,
+            'display' => $display
+        );
+        return $this->authorizeURL() . "?" . http_build_query($params);
+    }
+}
+class WeiboSocialChannel extends AbstractSocialChannel
+{
+    public function __construct($config, $accessToken = NULL, $refreshToken = NULL)
+    {
+        $this->host = $config['WB_HOST'];
+        $this->clientId = $config['WB_AKEY'];
+        $this->clientSecret = $config['WB_SKEY'];
+        $this->redirectUri = $config['WB_CALLBACK_URL'];
+        $this->accessToken = $accessToken;
+        $this->refreshToken = $refreshToken;
     }
 
-    public function post($url, $parameters = array(), $multi = false) {
-        $response = $this->oAuthRequest($url, 'POST', $parameters, $multi );
-        return json_decode($response, true);
+    public function getServiceName()
+    {
+        return "Weibo";
     }
 
-    public function delete($url, $parameters = array()) {
-        $response = $this->oAuthRequest($url, 'DELETE', $parameters);
-        return json_decode($response, true);
+    protected function accessTokenURL()
+    {
+        return 'https://api.weibo.com/oauth2/access_token';
     }
 
-
+    protected function authorizeURL()
+    {
+        return 'https://api.weibo.com/oauth2/authorize';
+    }
 
     public function shareWithImage( $text, $pic_path, $lat = NULL, $long = NULL )
     {
@@ -231,6 +218,22 @@ class WeiboSocialChannel extends AbstractSocialChannel
         }
 
         return $this->post( 'statuses/upload.json', $params, true );
+    }
+
+    private static function getCodeByMid($mid){
+        include_once('vendor/Base62/Base62.class.php');
+        $base62 = new Base62();
+        $str = '';
+        for ($i = strlen($mid) - 7; $i > -7; $i -=7)
+        {
+            $offset1 = $i < 0 ? 0 : $i;
+            $offset2 = $i + 7;
+            $num = substr($mid, $offset1,$offset2-$offset1);
+            $num = $base62->convert($num);
+            $str = $num .$str;
+        }
+
+        return $str;
     }
 
     public function getPermlinkById($user_id, $mid){

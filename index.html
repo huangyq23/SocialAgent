@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Share Test</title>
+</head>
+<body>
+    <h1>Authorize</h1>
+    <form method="POST" action="share.php">
+        <h3>Channel</h3>
+        <label><input type="radio" name="channel" value="weibo" checked="checked">Weibo</label>
+        <label><input type="radio" name="channel" value="twitter" disabled="disabled">Twitter</label>
+        <label><input type="radio" name="channel" value="facebook" disabled="disabled">Facebook</label>
+        <input type="hidden" name="action" value="authorize">
+        <input type="submit">
+    </form>
+    <hr>
+    <h1>Share</h1>
+    <form method="POST" action="share.php">
+        <div>
+            <h3>Channel</h3>
+            <label><input type="checkbox" name="channel[]" value="weibo" checked="checked">Weibo</label>
+            <label><input type="checkbox" name="channel[]" value="twitter" disabled="disabled">Twitter</label>
+            <label><input type="checkbox" name="channel[]" value="facebook" disabled="disabled">Facebook</label>
+        </div>
+        <div>
+            <h3>Image</h3>
+            <input name="img_url" type="url" placeholder="http://" size="50" value="http://fmn.rrimg.com/fmn062/xiaozhan/20120727/2115/x_large_0PW0_7c2200001a581261.jpg">
+        </div>
+        <div>
+            <h3>Link</h3>
+            <input name="link_url" type="url" placeholder="http://" size="50" value="http://www.conti.com.cn/weibo/data/21213/">
+        </div>
+        <div>
+            <h3>Message</h3>
+            <textarea name="text" placeholder="Message" cols="35" rows="10">Meow!</textarea>
+        </div>
+        <input type="hidden" name="action" value="share">
+        <input type="submit">
+    </form>
+
+</body>
+</html>
