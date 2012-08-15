@@ -15,8 +15,8 @@ $server_config['channels'] = array(
         'className'=>'WeiboSocialChannel',
         'config'=>array(
             'WB_HOST' => 'https://api.weibo.com/2/',
-            'WB_AKEY' => '835009534',
-            'WB_SKEY' => 'f6902a3bbbf50320d283598f7fcd15c3',
+            'WB_AKEY' => '',//Key
+            'WB_SKEY' => '',//Secret
             'WB_CALLBACK_URL' => 'http://localhost/social/demo/server/weibo_endpoint.php',
         ),
     ),
