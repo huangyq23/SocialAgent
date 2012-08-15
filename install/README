@@ -1,0 +1,16 @@
+In order to secure the communication between client and server, you have to generate you own RSA key pair.
+
+On a typical *nix installation
+Run the following command sequentially:
+
+$ openssl genrsa -out key.pem 1024
+    This will generate the key pair.
+
+$ cat key.pem
+    This will print the private key.
+
+$ openssl rsa -in key.pem -pubout
+    This will print the public key extracted from the key pair
+
+Copy the public and private key from the output of the above command, and paste them into client and server
+configuration files.

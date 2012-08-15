@@ -1,6 +1,28 @@
 <?php
 $server_config = array();
 
+//Datebase config
+$server_config['dbConfig'] = array(
+    'host' => 'localhost',
+    'dbname' => 'social_agent',
+    'user' => 'social_agent',
+    'passoword' => '21890*(H&^&Y)(90324',
+);
+
+//Channel config
+$server_config['channels'] = array(
+    'weibo' => array(
+        'className'=>'WeiboSocialChannel',
+        'config'=>array(
+            'WB_HOST' => 'https://api.weibo.com/2/',
+            'WB_AKEY' => '835009534',
+            'WB_SKEY' => 'f6902a3bbbf50320d283598f7fcd15c3',
+            'WB_CALLBACK_URL' => 'http://localhost/social/demo/server/weibo_endpoint.php',
+        ),
+    ),
+);
+
+//Security config (public and private Key)
 $server_config['publicKey']= <<<EOF
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDhHYgpBmCEJIWJIoAkPvJRs1w4
@@ -28,24 +50,4 @@ fN/RK+ipFvCzjMQVfZ1KmMpZGZ9X9gugNE1ABc1/eMdS
 -----END RSA PRIVATE KEY-----
 EOF;
 
-//Datebase config
-$server_config['dbConfig'] = array(
-    'host' => 'localhost',
-    'dbname' => 'social_agent',
-    'user' => 'social_agent',
-    'passoword' => '21890*(H&^&Y)(90324',
-);
-
-//Channel config
-$server_config['channels'] = array(
-    'weibo' => array(
-        'className'=>'WeiboSocialChannel',
-        'config'=>array(
-            'WB_HOST' => 'https://api.weibo.com/2/',
-            'WB_AKEY' => '835009534',
-            'WB_SKEY' => 'f6902a3bbbf50320d283598f7fcd15c3',
-            'WB_CALLBACK_URL' => 'http://localhost/social/demo/server/weibo_endpoint.php',
-        ),
-    ),
-);
 ?>

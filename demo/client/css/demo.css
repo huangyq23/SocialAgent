@@ -10,12 +10,12 @@ h1,h2,h3{
 #container{
     width: 600px;
 	background-color: #ffffff;
+	margin-right: auto;
+	margin-left: auto;
 	padding: 15px;
 	border-radius:2px;
 	box-shadow: 0 1px 3px #929292;
 	font-family: Georgia, "Times New Roman", Times, serif;
-	margin: auto;
-	height: 80px;
 }
 #container_title{
 	text-align: center;
@@ -28,18 +28,9 @@ input,textarea{
 	line-height: 30px;
 	font-size: 14px;
 }
-input[type=url], input[type=text]{shape-rendering
+input[type=url], input[type=text]{
 	width: 592px;
 }
 textarea{
 	width: 592px;
-}
-#loading_text{
-	color: #818181;
-    border-radius: 3px;
-	text-align: center;
-	padding-left: 80px;
-	height: 80px;
-	background: url(../img/loading.gif) no-repeat;
-	font: italic 30px/80px Georgia, "Times New Roman", Times, serif;
 }

@@ -157,11 +157,13 @@ EOF;
     	$data = $this->decodePayload($_POST['payload']);
         $channel = $data['channel'];
         $uniqueId = $data['unique_id'];
+        $text= $data['text'];
+        $linkUrl= $data['link_url'];
         $accessToken = $this->findAccessToken($uniqueId, $channel);
         if($accessToken){
             $socialChannel = $this->getChannel($channel);
             $socialChannel->setAccessToken($accessToken);
-            $result = $socialChannel->shareWithImage($data['text'], $data['img_url']);
+            $result = $socialChannel->shareWithImage($text.'|'.$linkUrl, $data['img_url']);
             echo $socialChannel->getPermlinkById($result['user']['id'], $result['id']);
         }else{
             echo "ERROR! Cannot Find Access Token";
