@@ -1,70 +1,34 @@
 <?php
-require_once('SocialChannel.class.php');
-require_once('Cryptography.class.php');
+require_once(dirname(__FILE__).'/../common/Cryptography.class.php');
+require_once(dirname(__FILE__).'/SocialChannel.class.php');
 
 class SocialAgent{
-    private static $publicKey = <<<EOF
------BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDhHYgpBmCEJIWJIoAkPvJRs1w4
-xlltfKKbzaRgU2gVVtH/kMFePotjGkSlONcb9k4Bu+zAjE2LEg2GpfUcjrexqA7H
-oLe9XD9/X1tDloXHNe+7G00VxGviStZkYuooVjE7OQ+1WMnSIJMKYAyfuz9sBwmN
-VBZK4K6HvXfGIp+u8wIDAQAB
------END PUBLIC KEY-----
-EOF;
-
-    private static $privateKey = <<<EOF
------BEGIN RSA PRIVATE KEY-----
-MIICXQIBAAKBgQDhHYgpBmCEJIWJIoAkPvJRs1w4xlltfKKbzaRgU2gVVtH/kMFe
-PotjGkSlONcb9k4Bu+zAjE2LEg2GpfUcjrexqA7HoLe9XD9/X1tDloXHNe+7G00V
-xGviStZkYuooVjE7OQ+1WMnSIJMKYAyfuz9sBwmNVBZK4K6HvXfGIp+u8wIDAQAB
-AoGBAODLwMBW4eKTJdX/Yb7QLOJxHVKEn6C5qRe0jsSyBWnpvOJcBvy5sC9Sd+IV
-lJkTqGoK4yyT7otFh8RBzTarPbqGp+FA0w1yooGtgBu2wgahDeQOvZOP7HB0mUZo
-DuJQeaQiH8PS/m0EaEZOCH3rhYb6TvDmYBKGaJs9Q3ocw8VBAkEA+cxpDUv4w91o
-9LQ3fFMqc4l1tTBQg69LQ6Ra+UORSnVZsMJE5F5RgXsuTdbiqNKbwtwQqS5w1aKJ
-PVpfgMdaCQJBAOa0P5eU9SAi62cwBBx1r3oLv8Fz9kjbgcKDn7pWS9FW8KX4M9/j
-3959WdUY+siW1N3+2LKpqsuWDnf7wyrbsBsCQCeWP2e+DHRt2D4/eTOYsneQ5ziJ
-qZjU5OaZW1l5XcMhCc+7WdOfJueQL+xiC5WZmtmsqm9FTthsY7d3ZP8xmJECQQDO
-x957ygqPvFzMh1AYBi+7L463IW4tTXoX04w2IyUfxFI8IKS2V3QP4sDC7PnTEsZH
-GCY4tTSd96iOSH1dC73jAkAozihPZ5dwQENa8D2/l29apPaOaZE7j3vQCGuIr8xP
-fN/RK+ipFvCzjMQVfZ1KmMpZGZ9X9gugNE1ABc1/eMdS
------END RSA PRIVATE KEY-----
-EOF;
-
-    private $crypto;
+    /**
+     * @var Cryptography
+     */
+    private $cryptography;
+    /**
+     * @var PDO
+     */
     private $dbConnection;
-
-    private static $dbConfig = array(
-        'host' => 'localhost',
-        'dbname' => 'social_agent',
-        'user' => 'social_agent',
-        'passoword' => '21890*(H&^&Y)(90324',
-    );
-
-    private static $channels = array(
-        'weibo' => array(
-            'className'=>'WeiboSocialChannel',
-            'config'=>array(
-                'WB_HOST' => 'https://api.weibo.com/2/',
-                'WB_AKEY' => '835009534',
-                'WB_SKEY' => 'f6902a3bbbf50320d283598f7fcd15c3',
-                'WB_CALLBACK_URL' => 'http://localhost/social/weibo/endpoint.php',
-            ),
-        ),
-    );
+    private $dbConfig;
+    private $channels;
 
     private function getDbConnection(){
         if(!$this->dbConnection){
-            $this->dbConnection = new PDO('mysql:host='.self::$dbConfig['host'].';dbname='.self::$dbConfig['dbname'], self::$dbConfig['user'], self::$dbConfig['passoword']);
+            $this->dbConnection = new PDO('mysql:host='.$this->dbConfig['host'].';dbname='.$this->dbConfig['dbname'], $this->dbConfig['user'], $this->dbConfig['passoword']);
             $this->dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
         return $this->dbConnection;
     }
 
-    public function __construct(){
+    public function __construct($config){
         if (!session_id()) {
             session_start();
         }
-        $this->crypto = new Cryptography(self::$publicKey, self::$privateKey);
+        $this->cryptography = new Cryptography($config['publicKey'], $config['privateKey']);
+        $this->dbConfig = $config['dbConfig'];
+        $this->channels= $config['channels'];
     }
 
 	public function handleClientRequest(){
@@ -79,27 +43,36 @@ EOF;
     }
 
     public function handleOAuthEndPoint($channel){
-        $state = $_GET['state'];
-        if(array_key_exists($state, $_SESSION)){
-            $state_data =  $_SESSION[$state];
-            $code = $_GET['code'];
-            $params = array(
-                'code' => $code
-            );
-            $socialChannel = $this->getChannel($channel);
-            $accessToken = $socialChannel->getAccessToken('code', $params);
-            $result = $this->updateAccessToken($state_data['unique_id'], $state_data['channel'], $accessToken['access_token'], $accessToken['expires_in'], $accessToken['uid']);
-            if(array_key_exists('callback_url', $state_data)){
-                $this->redirect($state_data['callback_url']);
-            }else{
-                echo 'Success';
+        $error = $_GET['error'];
+        $error_description = $_GET['error_description'];
+        if(!empty($error)){
+            echo 'Failed: '.htmlentities($error_description);
+        }else{
+            $state = $_GET['state'];
+            if(array_key_exists($state, $_SESSION)){
+                $state_data =  $_SESSION[$state];
+                $code = $_GET['code'];
+                $params = array(
+                    'code' => $code
+                );
+                $socialChannel = $this->getChannel($channel);
+                $accessToken = $socialChannel->getAccessToken('code', $params);
+                try{
+                    $this->updateAccessToken($state_data['unique_id'], $state_data['channel'], $accessToken['access_token'], $accessToken['expires_in'], $accessToken['uid']);
+                    if(array_key_exists('callback_url', $state_data)){
+                        $this->redirect($state_data['callback_url']);
+                    }else{
+                        echo 'Success';
+                    }
+                }catch (PDOException $e){
+                    echo 'Failed: Database Error';
+                }
             }
         }
-
     }
 
     private function decodePayload($payload){
-        $json = $this->crypto->decrypt($payload);
+        $json = $this->cryptography->decrypt($payload);
         return json_decode($json, TRUE);
     }
     public static function redirect($url, $statusCode = 302){
@@ -149,8 +122,8 @@ EOF;
     }
 
     private function getChannel($channel){
-        if (array_key_exists($channel, self::$channels)){
-            $channelData = self::$channels[$channel];
+        if (array_key_exists($channel, $this->channels)){
+            $channelData = $this->channels[$channel];
             $className = $channelData['className'];
             $socialChannel = new $className($channelData['config']);
             return $socialChannel;
