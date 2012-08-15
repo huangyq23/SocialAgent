@@ -16,7 +16,7 @@ class SocialAgent{
 
     private function getDbConnection(){
         if(!$this->dbConnection){
-            $this->dbConnection = new PDO('mysql:host='.$this->dbConfig['host'].';dbname='.$this->dbConfig['dbname'], $this->dbConfig['user'], $this->dbConfig['passoword']);
+            $this->dbConnection = new PDO('mysql:host='.$this->dbConfig['host'].';dbname='.$this->dbConfig['dbname'], $this->dbConfig['user'], $this->dbConfig['password']);
             $this->dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
         return $this->dbConnection;
@@ -155,18 +155,18 @@ EOF;
 
     public function actionShare(){
     	$data = $this->decodePayload($_POST['payload']);
-        $channel = $data['channel'];
-        $uniqueId = $data['unique_id'];
-        $text= $data['text'];
-        $linkUrl= $data['link_url'];
-        $accessToken = $this->findAccessToken($uniqueId, $channel);
-        if($accessToken){
-            $socialChannel = $this->getChannel($channel);
-            $socialChannel->setAccessToken($accessToken);
-            $result = $socialChannel->shareWithImage($text.'|'.$linkUrl, $data['img_url']);
-            echo $socialChannel->getPermlinkById($result['user']['id'], $result['id']);
-        }else{
-            echo "ERROR! Cannot Find Access Token";
+        $channels = $data['channels'];
+        foreach($channels as $channel){
+            $uniqueId = $data['unique_id'];
+            $text= $data['text'];
+            $linkUrl= $data['link_url'];
+            $accessToken = $this->findAccessToken($uniqueId, $channel);
+            if($accessToken){
+                $socialChannel = $this->getChannel($channel);
+                $socialChannel->setAccessToken($accessToken);
+                $result = $socialChannel->shareWithImage($text.'|'.$linkUrl, $data['img_url']);
+                echo $socialChannel->getPermlinkById($result['user']['id'], $result['id']);
+            }
         }
     }
 }

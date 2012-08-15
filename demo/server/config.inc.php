@@ -6,7 +6,7 @@ $server_config['dbConfig'] = array(
     'host' => 'localhost',
     'dbname' => 'social_agent',
     'user' => 'social_agent',
-    'passoword' => '21890*(H&^&Y)(90324',
+    'password' => '21890*(H&^&Y)(90324',
 );
 
 //Channel config

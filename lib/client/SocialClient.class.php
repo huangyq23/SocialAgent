@@ -5,11 +5,11 @@ class SocialClient
     private $crypto;
     private $payload;
     private $action;
-    private $callback_link;
+    private $callbackUrl;
 
     public function __construct($config){
         $this->crypto = new Cryptography($config['publicKey']);
-        $this->callback_link = $config['callback_link'];
+        $this->callbackUrl = $config['callbackUrl'];
     }
 
     public function handleClientRequest(){
@@ -27,29 +27,37 @@ class SocialClient
         echo "12";
     }
 
-    public function actionAuthorize(){
+    private function authorize($unique_id, $channel, $client_type='default'){
         $this->action = 'authorize';
         $data = array(
-            'channel' => $_POST['channel'],
-            'unique_id' => '1234567890',
-            'client_type' => 'mobile',
-            'callback_url' => $this->callback_link,
+            'channel' => $channel,
+            'unique_id' => $unique_id,
+            'client_type' => $client_type,
+            'callback_url' => $this->callbackUrl,
+        );
+        $serialized_data = json_encode($data);
+        $this->payload = $this->crypto->encrypt($serialized_data);
+    }
+
+    public function actionAuthorize(){
+        $this->authorize('1234567890', $_POST['channel'], 'mobile');
+    }
+
+    private function share($unique_id, $channels, $text, $img_url=NULL, $link_url=NULL){
+        $this->action = 'share';
+        $data = array(
+            'channels' => $channels,
+            'unique_id' => $unique_id,
+            'text' => $text,
+            'img_url' => $img_url,
+            'link_url' => $link_url,
         );
         $serialized_data = json_encode($data);
         $this->payload = $this->crypto->encrypt($serialized_data);
     }
 
     public function actionShare(){
-        $this->action = 'share';
-        $data = array(
-            'channel' => join(',',$_POST['channel']),
-            'unique_id' => '1234567890',
-            'text' => $_POST['text'],
-            'img_url' => $_POST['img_url'],
-            'link_url' => $_POST['link_url'],
-        );
-        $serialized_data = json_encode($data);
-        $this->payload = $this->crypto->encrypt($serialized_data);
+        $this->share('1234567890', $_POST['channels'], $_POST['text'], $_POST['img_url'], $_POST['link_url']);
     }
 
     public function getPayload(){

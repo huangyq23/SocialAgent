@@ -3,7 +3,7 @@
 $client_config = array();
 
 //The callback url after an operation is complete.
-$client_config['callback_link'] = 'http://localhost/social/demo/client/';
+$client_config['callbackUrl'] = 'http://localhost/social/demo/client/';
 
 //The public key corresponding to the private key on server.
 $client_config['publicKey'] = <<<EOF
